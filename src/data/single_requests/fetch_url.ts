@@ -1,0 +1,12 @@
+"use server";
+
+export default async function FetchUrl(mediaType: string, tmdb: string) {
+    // Construct absolute URL for server-side fetch
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+    const url = `${baseUrl}/api/extract?tmdb=${tmdb}&type=${mediaType}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    return (data.url);
+} 
+

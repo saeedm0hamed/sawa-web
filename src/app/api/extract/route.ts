@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Missing tmdb parameter' }, { status: 400 });
     }
 
-    const targetUrl = `https://vidsrc-embed.ru/embed/${type}?tmdb=${tmdb}`;
+    const targetUrl = `https://player.autoembed.cc/embed/${type}/${tmdb}`;
     let browser: any = null;
 
     try {
@@ -119,7 +119,7 @@ export async function GET(request: NextRequest) {
 
         // Wait for m3u8 to be captured
         const startTime = Date.now();
-        while (!m3u8Url && Date.now() - startTime < 15000) {
+        while (!m3u8Url && Date.now() - startTime < 17000) {
             await new Promise(r => setTimeout(r, 500));
         }
 
