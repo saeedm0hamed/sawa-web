@@ -94,15 +94,14 @@ export default function DetailsContent({ item }: { item: FullDetailsType }) {
       </div>
 
       <main className="flex-1 w-full relative z-10">
-        {/* Info and favorite button */}
         <InfoSection
           main={main}
           isLoading={isLoading}
           isFavorite={isFavorite}
           toggleFavorite={toggleFavorite}
+          isMobile={isMobile}
         />
 
-        {/* Other sections below */}
         <div className="mx-4 md:mx-8 flex flex-col gap-3 md:gap-5">
           <CastSection cast={media.cast} />
           <SeasonsSection seasons={main.seasons} />

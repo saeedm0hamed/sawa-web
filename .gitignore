@@ -1,6 +1,5 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-/.assets/
 
 # dependencies
 /node_modules
@@ -23,6 +22,7 @@
 /build
 
 # misc
+/assets
 .DS_Store
 *.pem
 
