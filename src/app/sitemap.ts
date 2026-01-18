@@ -15,7 +15,7 @@ import fetchKrSeries from "@/data/series/fetch_kr_series";
 import fetchAnimeSeries from "@/data/series/fetch_anime_series";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = "https://moovy-hub.vercel.app";
+  const baseUrl = "https://sawa.vercel.app";
 
   const [
     arabicMovies,

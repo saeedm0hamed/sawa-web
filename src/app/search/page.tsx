@@ -15,43 +15,43 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   return (
     <>
       <Head>
-        <title>{`نتائج البحث عن ${query} | مكتبة موفي`}</title>
+        <title>{`نتائج البحث عن ${query} | سوا`}</title>
         <meta
           name='description'
           content={`استكشف نتائج البحث عن "${query}" في مكتبة موفي، واعرف التقييمات، القصص، والمزيد عن الأفلام والمسلسلات بجودة عالية وبدون إعلانات.`}
         />
         <meta
           name='keywords'
-          content={`مكتبة موفي, موفي, Moovy, ${query}, بحث عن ${query}, مشاهدة ${query}, تحميل ${query}, أفضل ${query}, أحدث ${query}, تقييم ${query}, معلومات ${query}, مكتبة أفلام, مكتبة مسلسلات, مشاهدة أفلام, مشاهدة مسلسلات`}
+          content={`سوا, سوا, sawa, ${query}, بحث عن ${query}, مشاهدة ${query}, تحميل ${query}, أفضل ${query}, أحدث ${query}, تقييم ${query}, معلومات ${query}, مكتبة أفلام, مكتبة مسلسلات, مشاهدة أفلام, مشاهدة مسلسلات`}
         />
         <meta name='robots' content='index, follow' />
 
         {/* Open Graph */}
-        <meta property='og:title' content={`نتائج البحث عن ${query} | مكتبة موفي`} />
+        <meta property='og:title' content={`نتائج البحث عن ${query} | سوا`} />
         <meta
           property='og:description'
           content={`استكشف نتائج البحث عن "${query}" في مكتبة موفي، واعرف التقييمات، القصص، والمزيد عن الأفلام والمسلسلات بجودة عالية وبدون إعلانات.`}
         />
         <meta property='og:type' content='website' />
-        <meta property='og:url' content={`https://moovy.vercel.app/search?query=${encodeURIComponent(query)}`} />
-        <meta property='og:site_name' content='مكتبة موفي' />
+        <meta property='og:url' content={`https://sawa.vercel.app/search?query=${encodeURIComponent(query)}`} />
+        <meta property='og:site_name' content='سوا' />
         <meta property='og:locale' content='ar_EG' />
-        <meta property='og:image' content='https://moovy.vercel.app/images/sawa.webp' />
+        <meta property='og:image' content='https://sawa.vercel.app/images/sawa.webp' />
         <meta property='og:image:width' content='1200' />
         <meta property='og:image:height' content='630' />
-        <meta property='og:image:alt' content='شعار مكتبة موفي' />
+        <meta property='og:image:alt' content='شعار سوا' />
 
         {/* Twitter Card */}
         <meta name='twitter:card' content='summary_large_image' />
-        <meta name='twitter:title' content={`نتائج البحث عن ${query} | مكتبة موفي`} />
+        <meta name='twitter:title' content={`نتائج البحث عن ${query} | سوا`} />
         <meta
           name='twitter:description'
           content={`استكشف نتائج البحث عن "${query}" في مكتبة موفي، واعرف التقييمات، القصص، والمزيد عن الأفلام والمسلسلات بجودة عالية وبدون إعلانات.`}
         />
-        <meta name='twitter:image' content='https://moovy.vercel.app/images/sawa.webp' />
+        <meta name='twitter:image' content='https://sawa.vercel.app/images/sawa.webp' />
 
         {/* Canonical */}
-        <link rel='canonical' href={`https://moovy.vercel.app/search?query=${encodeURIComponent(query)}`} />
+        <link rel='canonical' href={`https://sawa.vercel.app/search?query=${encodeURIComponent(query)}`} />
       </Head>
 
       <div className='min-h-screen flex flex-col'>

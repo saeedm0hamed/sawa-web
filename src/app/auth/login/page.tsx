@@ -51,7 +51,7 @@ export default function LoginPage() {
         <p className='text-center mt-8 text-white/60 text-sm'>
           جميع الحقوق محفوظة
           <span className='inline-block w-2 h-2 mx-2 rounded-full bg-white/60' />
-          Moovy &#x00A9; {new Date().getFullYear()}
+          Sawa &#x00A9; {new Date().getFullYear()}
         </p>
       </div>
     </div>
