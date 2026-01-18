@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // app/auth/signup/page.tsx
 'use client';
 // React

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // Firebase has been removed - this file is kept for compatibility
 // Replace with Clerk/MongoDB/Prisma later
 

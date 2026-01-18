@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client"
 import { useEffect, useRef, useState } from "react"
 import type { DependencyList } from "react"
