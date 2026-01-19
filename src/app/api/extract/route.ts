@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextRequest, NextResponse } from 'next/server';
 import puppeteer from 'puppeteer';
 import chromium from '@sparticuz/chromium';
@@ -18,7 +17,8 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Missing tmdb parameter' }, { status: 400 });
     }
 
-    const targetUrl = `https://player.autoembed.cc/embed/${type}/${tmdb}`;
+    // const targetUrl = `https://player.autoembed.cc/embed/${type}/${tmdb}`;
+    const targetUrl = `https://test.autoembed.cc/embed/${type}/${tmdb}?server=2`;
     let browser: any = null;
 
     try {
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
             }
 
             // Prefer the concrete .quibblezoomfable.com index.m3u8 URL if it appears
-            if (url.includes('quibblezoomfable.com') && url.includes('/index.m3u8')) {
+            if (url.includes('cdn30091') || url.includes('xenna400goa') || url.includes('stream2') || url.includes('/index.m3u8')) {
                 console.log('Found preferred index.m3u8 request:', url);
                 m3u8Url = url;
             } 
@@ -74,18 +74,17 @@ export async function GET(request: NextRequest) {
         });
 
         // Capture response content for m3u8
-        page.on('response', async response => {
-             const url = response.url();
-             if (url === m3u8Url || (url.includes('.m3u8') && !m3u8Content)) {
-                 try {
-                     const text = await response.text();
-                     if (text.includes('#EXTM3U')) {
-                         m3u8Content = text;
-                         m3u8Url = url; // Ensure we have the correct URL
-                     }
-                 } catch (e) {}
-             }
-        });
+        // page.on('response', async response => {
+        //      const url = response.url();
+        //      if (url === m3u8Url || (url.includes('.m3u8') && !m3u8Content)) {
+        //          try {
+        //              const text = await response.text();
+        //              if (text.includes('#EXTM3U')) {
+        //                  m3u8Content = text;
+        //              }
+        //          } catch (e) {}
+        //      }
+        // });
 
         console.log('Navigating to:', targetUrl);
         await page.goto(targetUrl, { waitUntil: 'domcontentloaded' });
@@ -93,21 +92,21 @@ export async function GET(request: NextRequest) {
         // Wait for iframe
         try {
             console.log('Waiting for iframe...');
-            const iframeElement = await page.waitForSelector('iframe', { timeout: 15000 });
+            const iframeElement = await page.waitForSelector('.player-container', { timeout: 1000 });
             if (iframeElement) {
                 // Wait a bit for stability
                 await new Promise(r => setTimeout(r, 2000));
                 
                 // Re-query iframe handle as it might have changed
-                const iframeElement2 = await page.$('iframe');
+                const iframeElement2 = await page.$('.player-container div');
                 if (iframeElement2) {
                     const iframe = await iframeElement2.contentFrame();
                     if (iframe) {
                         console.log('Iframe found, looking for #pl_but...');
                         try {
-                            await iframe.waitForSelector('#pl_but', { timeout: 5000 });
+                            await iframe.waitForSelector('span', { timeout: 5000 });
                             console.log('Clicking #pl_but...');
-                            await iframe.click('#pl_but');
+                            await iframe.click('span');
                         } catch (e) {
                             console.log('Could not click #pl_but (might be hidden or already playing):', e.message);
                         }
@@ -128,7 +127,7 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({
                 success: true,
                 url: m3u8Url,
-                content: m3u8Content
+                // content: m3u8Content
             });
         } else {
             return NextResponse.json({ error: 'Failed to extract m3u8' }, { status: 500 });
