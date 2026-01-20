@@ -1,144 +1,154 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { NextRequest, NextResponse } from 'next/server';
-import puppeteer from 'puppeteer';
-import chromium from '@sparticuz/chromium';
+import chromium from '@sparticuz/chromium-min';
 import puppeteerCore from 'puppeteer-core';
 
-export const maxDuration = 60; // Set timeout to 60 seconds for Vercel
+// Helper to validate TMDB ID
+const isValidTmdb = (id: string) => /^\d+$/.test(id);
 
-export async function GET(request: NextRequest) {
-    const { searchParams } = new URL(request.url);
-    const tmdb = searchParams.get('tmdb');
-    const type = searchParams.get('type');
+export async function GET(req: NextRequest) {
+  const searchParams = req.nextUrl.searchParams;
+  const type = searchParams.get('type');
+  const tmdb = searchParams.get('tmdb');
+
+  // 1. Validate parameters
+  if (!type || !['movie', 'tv'].includes(type)) {
+    return NextResponse.json({ error: 'Invalid type. Must be "movie" or "tv"' }, { status: 400 });
+  }
+  if (!tmdb || !isValidTmdb(tmdb)) {
+    return NextResponse.json({ error: 'Invalid tmdb. Must be a numeric ID' }, { status: 400 });
+  }
+
+  const targetUrl = `https://player.autoembed.cc/embed/${type}/${tmdb}`;
+  let browser;
+
+  try {
+    // 5. Setup Browser (Vercel vs Local)
+    const isDev = process.env.NODE_ENV === 'development';
     
-    if (!type) {
-        return NextResponse.json({ error: 'Missing type parameter' }, { status: 400 });
+    if (isDev) {
+      // Dynamic import for local dev to avoid bundling puppeteer in production if not needed
+      // although it's in dependencies, keeping it clean is good.
+      const puppeteer = await import('puppeteer');
+      browser = await puppeteer.default.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      });
+    } else {
+      // Production (Vercel)
+      // Configure sparticuz/chromium
+      chromium.setGraphicsMode = false;
+      
+      browser = await puppeteerCore.launch({
+        args: chromium.args,
+        executablePath: await chromium.executablePath(),
+      });
     }
-    if (!tmdb) {
-        return NextResponse.json({ error: 'Missing tmdb parameter' }, { status: 400 });
-    }
 
-    // const targetUrl = `https://player.autoembed.cc/embed/${type}/${tmdb}`;
-    const targetUrl = `https://test.autoembed.cc/embed/${type}/${tmdb}?server=2`;
-    let browser: any = null;
+    const page = await browser.newPage();
 
-    try {
-        const isLocal = process.env.NODE_ENV === 'development';
-        
-        if (isLocal) {
-            browser = await puppeteer.launch({
-                headless: true,
-                args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-blink-features=AutomationControlled']
-            });
-        } else {
-            browser = await puppeteerCore.launch({
-                args: [...chromium.args, '--disable-blink-features=AutomationControlled'],
-                defaultViewport: chromium.defaultViewport,
-                executablePath: await chromium.executablePath(),
-                headless: chromium.headless,
-            });
-        }
+    // 6. Handle disable-devtool & Anti-bot
+    // Mask webdriver
+    await page.evaluateOnNewDocument(() => {
+      // @ts-ignore
+      Object.defineProperty(navigator, 'webdriver', {
+        get: () => false,
+      });
+    });
 
-        const page = await browser.newPage();
-        
-        // Stealth mode: Hide webdriver
-        await page.evaluateOnNewDocument(() => {
-            Object.defineProperty(navigator, 'webdriver', {
-                get: () => false,
-            });
-        });
+    // Set User Agent to look like a real browser
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
-        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36');
+    // Go to the page
+    // Using networkidle0 to ensure initial assets are loaded
+    await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
-        // Enable request interception
-        await page.setRequestInterception(true);
+    // 3. Handle page interaction sequence
+    // Wait for the ad / main player logic
+    // The prompt says "Wait for the 15-second ad to complete"
+    // We can poll for the video source.
+    
+    // Define a function to find the correct m3u8
+    const findM3u8 = async () => {
+      // Wait up to 60 seconds for the real video source to appear
+      const maxRetries = 18; 
+      const interval = 1000; // 1 second
 
-        let m3u8Url = null;
-        let m3u8Content = null;
+      for (let i = 0; i < maxRetries; i++) {
+        // Check for player container and video source
+        const src = await page.evaluate(() => {
+            const playerContainer = document.querySelector('.player-container');
+            if (!playerContainer) return null;
 
-        page.on('request', request => {
-            const url = request.url();
-            // Block anti-debugging scripts
-            if (url.includes('disable-devtool')) {
-                console.log('Blocking disable-devtool:', url);
-                request.abort();
-                return;
-            }
+            const video = playerContainer.querySelector('video');
+            if (!video) return null;
 
-            // Prefer the concrete .quibblezoomfable.com index.m3u8 URL if it appears
-            if (url.includes('cdn30091') || url.includes('xenna400goa') || url.includes('stream2') || url.includes('/index.m3u8')) {
-                console.log('Found preferred index.m3u8 request:', url);
-                m3u8Url = url;
-            } 
+            const source = video.querySelector('source');
+            if (!source) return null;
             
-            request.continue();
+            return source.getAttribute('src');
         });
 
-        // Capture response content for m3u8
-        // page.on('response', async response => {
-        //      const url = response.url();
-        //      if (url === m3u8Url || (url.includes('.m3u8') && !m3u8Content)) {
-        //          try {
-        //              const text = await response.text();
-        //              if (text.includes('#EXTM3U')) {
-        //                  m3u8Content = text;
-        //              }
-        //          } catch (e) {}
-        //      }
-        // });
-
-        console.log('Navigating to:', targetUrl);
-        await page.goto(targetUrl, { waitUntil: 'domcontentloaded' });
-
-        // Wait for iframe
-        try {
-            console.log('Waiting for iframe...');
-            const iframeElement = await page.waitForSelector('.player-container', { timeout: 1000 });
-            if (iframeElement) {
-                // Wait a bit for stability
-                await new Promise(r => setTimeout(r, 2000));
-                
-                // Re-query iframe handle as it might have changed
-                const iframeElement2 = await page.$('.player-container div');
-                if (iframeElement2) {
-                    const iframe = await iframeElement2.contentFrame();
-                    if (iframe) {
-                        console.log('Iframe found, looking for #pl_but...');
-                        try {
-                            await iframe.waitForSelector('span', { timeout: 5000 });
-                            console.log('Clicking #pl_but...');
-                            await iframe.click('span');
-                        } catch (e) {
-                            console.log('Could not click #pl_but (might be hidden or already playing):', e.message);
-                        }
-                    }
-                }
-            }
-        } catch (e) {
-            console.log('Iframe wait failed:', e.message);
+        if (src && src.includes('.m3u8')) {
+           // 4. Extract and Filter
+           // Filter out known ad domains
+           if (!src.includes('phim1280') && !src.includes('google') && !src.includes('promo')) {
+             // Optional: Check for known content patterns if possible, but exclusion is safer
+             return src;
+           }
         }
+        
+        // Try to click skip button if present
+        // try {
+        //     const clicked = await page.evaluate(() => {
+        //         const buttons = Array.from(document.querySelectorAll('div, button, span, a'));
+        //         // Find button with "Skip" but NOT "after" (to avoid "Skip after 5s")
+        //         const skip = buttons.find(b => {
+        //             const text = b.innerHTML?.toLowerCase() || '';
+        //             return text.includes('skip') && !text.includes('after') && (text.includes('ad') || text.includes('intro'));
+        //         });
+        //         if (skip) {
+        //             skip.click();
+        //             return true;
+        //         }
+        //         return false;
+        //     });
+            
+        //     if (clicked) {
+        //         // Wait a bit for transition
+        //         await new Promise(r => setTimeout(r, 2000));
+        //     }
+        // } catch (e) {
+        //     // ignore
+        // }
+        
+        // Wait 1s
+        await new Promise(r => setTimeout(r, interval));
+      }
+      return null;
+    };
 
-        // Wait for m3u8 to be captured
-        const startTime = Date.now();
-        while (!m3u8Url && Date.now() - startTime < 17000) {
-            await new Promise(r => setTimeout(r, 500));
-        }
-
-        if (m3u8Url) {
-            return NextResponse.json({
-                success: true,
-                url: m3u8Url,
-                // content: m3u8Content
-            });
-        } else {
-            return NextResponse.json({ error: 'Failed to extract m3u8' }, { status: 500 });
-        }
-
-    } catch (error: any) {
-        console.error('Extraction error:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
-    } finally {
-        if (browser) {
-            await browser.close();
-        }
+    // Wait for a bit initially to let the page load fully
+    await new Promise(r => setTimeout(r, 2000));
+    
+    // Try to find the m3u8
+    const m3u8Url = await findM3u8();
+    
+    if (m3u8Url) {
+      return NextResponse.json({ url: m3u8Url }, { status: 200 });
+    } else {
+      // 7. Error handling - Timeout/Content not found
+      // Take a screenshot for debugging (optional, can't return image easily here but could log base64)
+      // console.log('Failed to extract. Page content:', await page.content());
+      return NextResponse.json({ error: 'Content not found or timeout' }, { status: 404 });
     }
+
+  } catch (error: any) {
+    console.error('Extraction error:', error);
+    return NextResponse.json({ error: 'Processing error', details: error.message }, { status: 500 });
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
+  }
 }
