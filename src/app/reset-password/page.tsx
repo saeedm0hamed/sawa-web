@@ -35,10 +35,10 @@ export default function ResetPasswordPage() {
   const onSubmit = async (data: FormData) => {
     setMessage('');
     const res = await resetPassword(data.email);
-    if (res.success) {
+    if (res) { // res.success
       setMessage('بعتنالك لينك على الإيميل، راجعه وكمّل من هناك.');
     } else {
-      if (res.error === 'auth/user-not-found') {
+      if (!res) {
         setMessage('الإيميل مش مرتبط بأي حساب.');
       } else {
         setMessage('في مشكلة حصلت، جرب تاني.');
