@@ -30,7 +30,7 @@ export default async function MediaDetailsPage({ params }: { params: Promise<{ i
               : 'سوا مكانك لمعرفة كل جديد عن الأفلام والمسلسلات بالعربي.'
           }
         />
-        <link rel='canonical' href={`https://sawa.vercel.app/${data?.main.media_type}/${data?.main.id}`} />
+        <link rel='canonical' href={`https://sawa-watch.vercel.app/${data?.main.media_type}/${data?.main.id}`} />
         <meta
           name='keywords'
           content={[

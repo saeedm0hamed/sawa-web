@@ -60,11 +60,11 @@ export default async function SectionPage({ params }: { params: Promise<{ sectio
           property='og:description'
           content={`استعرض ${sectionTitles[section_name]} في مكتبة موفي، مع تفاصيل كاملة عن أحدث وأفضل الأفلام والمسلسلات بالعربي.`}
         />
-        <meta property='og:image' content='https://sawa.vercel.app/images/sawa.png' />
+        <meta property='og:image' content='https://sawa-watch.vercel.app/images/sawa.png' />
         <meta property='og:type' content='website' />
         <meta property='og:locale' content='ar_AR' />
         <meta property='og:site_name' content='Sawa' />
-        <meta property='og:url' content='https://sawa.vercel.app' />
+        <meta property='og:url' content='https://sawa-watch.vercel.app' />
 
         {/* Twitter */}
         <meta name='twitter:card' content='summary_large_image' />
@@ -73,7 +73,7 @@ export default async function SectionPage({ params }: { params: Promise<{ sectio
           name='twitter:description'
           content={`استعرض ${sectionTitles[section_name]} في مكتبة موفي، مع تفاصيل كاملة عن أحدث وأفضل الأفلام والمسلسلات بالعربي.`}
         />
-        <meta name='twitter:image' content='https://sawa.vercel.app/images/sawa.png' />
+        <meta name='twitter:image' content='https://sawa-watch.vercel.app/images/sawa.png' />
         <meta name='twitter:creator' content='@saeedm0hamed' />
 
         {/* Verification */}

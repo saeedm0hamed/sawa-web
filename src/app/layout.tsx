@@ -115,7 +115,7 @@ export const metadata: Metadata = {
   creator: 'Saeed Mohamed',
   publisher: 'Saeed Mohamed',
 
-  metadataBase: new URL('https://sawa.vercel.app'),
+  metadataBase: new URL('https://sawa-watch.vercel.app'),
 
   robots: {
     index: true,
@@ -136,7 +136,7 @@ export const metadata: Metadata = {
     title: 'Sawa - سوا',
     description:
       'سوا مكانك لمعرفة كل جديد عن الأفلام والمسلسلات، من القصة والتقييمات لحد مواعيد العرض، وكل ده بالعربي.',
-    url: 'https://sawa.vercel.app',
+    url: 'https://sawa-watch.vercel.app',
     siteName: 'Sawa',
     images: [
       {
@@ -159,7 +159,7 @@ export const metadata: Metadata = {
     title: 'Sawa - سوا',
     description:
       'سوا مكانك لمعرفة كل جديد عن الأفلام والمسلسلات، من القصة والتقييمات لحد مواعيد العرض، وكل ده بالعربي.',
-    images: ['https://sawa.vercel.app/images/sawa.png'],
+    images: ['https://sawa-watch.vercel.app/images/sawa.png'],
     creator: '@saeedm0hamed',
   },
 
