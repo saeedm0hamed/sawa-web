@@ -1,0 +1,5 @@
+{
+  "name": "sawa-party",
+  "main": "party/server.ts",
+  "compatibilityDate": "2025-01-20"
+}
