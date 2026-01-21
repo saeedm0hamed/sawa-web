@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { NextRequest, NextResponse } from 'next/server';
-import chromium from '@sparticuz/chromium-min';
+import chromium from '@sparticuz/chromium';
 import puppeteerCore from 'puppeteer-core';
 
 // Helper to validate TMDB ID
@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
     // Define a function to find the correct m3u8
     const findM3u8 = async () => {
       // Wait up to 60 seconds for the real video source to appear
-      const maxRetries = 20; 
+      const maxRetries = 18; 
       const interval = 1000; // 1 second
 
       for (let i = 0; i < maxRetries; i++) {
