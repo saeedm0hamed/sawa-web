@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
     // Define a function to find the correct m3u8
     const findM3u8 = async () => {
       // Wait up to 60 seconds for the real video source to appear
-      const maxRetries = 18; 
+      const maxRetries = 60; 
       const interval = 1000; // 1 second
 
       for (let i = 0; i < maxRetries; i++) {
