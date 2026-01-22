@@ -41,10 +41,10 @@ export async function GET(req: NextRequest) {
       // Production (Vercel)
       // Configure sparticuz/chromium
       chromium.setGraphicsMode = false;
-      
+      const execPath = await chromium.executablePath('https://github.com/Sparticuz/chromium/releases/download/v123.0.1/chromium-v123.0.1-pack.tar'); 
       browser = await puppeteerCore.launch({
         args: chromium.args,
-        executablePath: await chromium.executablePath(),
+        executablePath: execPath,
         
       });
     }
