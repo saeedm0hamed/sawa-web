@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import chromium from '@sparticuz/chromium';
 import puppeteerCore from 'puppeteer-core';
 
+
+export const maxDuration = 60;
+
 // Helper to validate TMDB ID
 const isValidTmdb = (id: string) => /^\d+$/.test(id);
 
@@ -42,6 +45,7 @@ export async function GET(req: NextRequest) {
       browser = await puppeteerCore.launch({
         args: chromium.args,
         executablePath: await chromium.executablePath(),
+        
       });
     }
 
