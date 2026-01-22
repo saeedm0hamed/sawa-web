@@ -4,7 +4,7 @@ import chromium from '@sparticuz/chromium';
 import puppeteerCore from 'puppeteer-core';
 
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 // Helper to validate TMDB ID
 const isValidTmdb = (id: string) => /^\d+$/.test(id);
@@ -45,11 +45,20 @@ export async function GET(req: NextRequest) {
       browser = await puppeteerCore.launch({
         args: chromium.args,
         executablePath: execPath,
-        
       });
     }
 
     const page = await browser.newPage();
+
+    // Block images, fonts, and css to speed up load
+    await page.setRequestInterception(true);
+    page.on('request', (req) => {
+        if (['image', 'stylesheet', 'font'].includes(req.resourceType())) {
+            req.abort();
+        } else {
+            req.continue();
+        }
+    });
 
     // 6. Handle disable-devtool & Anti-bot
     // Mask webdriver
@@ -103,28 +112,28 @@ export async function GET(req: NextRequest) {
         }
         
         // Try to click skip button if present
-        // try {
-        //     const clicked = await page.evaluate(() => {
-        //         const buttons = Array.from(document.querySelectorAll('div, button, span, a'));
-        //         // Find button with "Skip" but NOT "after" (to avoid "Skip after 5s")
-        //         const skip = buttons.find(b => {
-        //             const text = b.innerHTML?.toLowerCase() || '';
-        //             return text.includes('skip') && !text.includes('after') && (text.includes('ad') || text.includes('intro'));
-        //         });
-        //         if (skip) {
-        //             skip.click();
-        //             return true;
-        //         }
-        //         return false;
-        //     });
+        try {
+            const clicked = await page.evaluate(() => {
+                const buttons = Array.from(document.querySelectorAll('div, button, span, a'));
+                // Find button with "Skip" but NOT "after" (to avoid "Skip after 5s")
+                const skip = buttons.find(b => {
+                    const text = b.innerHTML?.toLowerCase() || '';
+                    return text.includes('skip') && !text.includes('after') && (text.includes('ad') || text.includes('intro'));
+                });
+                if (skip) {
+                    skip.click();
+                    return true;
+                }
+                return false;
+            });
             
-        //     if (clicked) {
-        //         // Wait a bit for transition
-        //         await new Promise(r => setTimeout(r, 2000));
-        //     }
-        // } catch (e) {
-        //     // ignore
-        // }
+            if (clicked) {
+                // Wait a bit for transition
+                await new Promise(r => setTimeout(r, 2000));
+            }
+        } catch (e) {
+            // ignore
+        }
         
         // Wait 1s
         await new Promise(r => setTimeout(r, interval));
