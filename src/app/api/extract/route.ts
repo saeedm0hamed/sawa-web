@@ -121,7 +121,7 @@ export async function GET(req: NextRequest) {
                     return text.includes('skip') && !text.includes('after') && (text.includes('ad') || text.includes('intro'));
                 });
                 if (skip) {
-                    skip.click();
+                    (skip as HTMLElement).click();
                     return true;
                 }
                 return false;
