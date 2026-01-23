@@ -21,6 +21,7 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tooltip": "^1.2.7",
     "@sparticuz/chromium": "^143.0.4",
+    "@sparticuz/chromium-min": "^143.0.4",
     "axios": "^1.13.2",
     "cheerio": "^1.1.2",
     "class-variance-authority": "^0.7.1",
@@ -43,7 +44,9 @@
     "simplebar-react": "^3.3.2",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
+    "torrent-search-api": "^2.1.4",
     "vaul": "^1.1.2",
+    "webtorrent": "^2.8.5",
     "yt-dlp-wrap": "^2.3.12",
     "zod": "^4.0.14"
   },

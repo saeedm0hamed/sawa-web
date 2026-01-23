@@ -1,10 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { NextRequest, NextResponse } from 'next/server';
-import chromium from '@sparticuz/chromium';
+import chromium from '@sparticuz/chromium-min';
 import puppeteerCore from 'puppeteer-core';
-
-
-export const maxDuration = 300;
 
 // Helper to validate TMDB ID
 const isValidTmdb = (id: string) => /^\d+$/.test(id);
@@ -41,24 +38,14 @@ export async function GET(req: NextRequest) {
       // Production (Vercel)
       // Configure sparticuz/chromium
       chromium.setGraphicsMode = false;
-      const execPath = await chromium.executablePath('https://github.com/Sparticuz/chromium/releases/download/v123.0.1/chromium-v123.0.1-pack.tar'); 
+      
       browser = await puppeteerCore.launch({
         args: chromium.args,
-        executablePath: execPath,
+        executablePath: await chromium.executablePath(),
       });
     }
 
     const page = await browser.newPage();
-
-    // Block images, fonts, and css to speed up load
-    await page.setRequestInterception(true);
-    page.on('request', (req) => {
-        if (['image', 'stylesheet', 'font'].includes(req.resourceType())) {
-            req.abort();
-        } else {
-            req.continue();
-        }
-    });
 
     // 6. Handle disable-devtool & Anti-bot
     // Mask webdriver
@@ -84,7 +71,7 @@ export async function GET(req: NextRequest) {
     // Define a function to find the correct m3u8
     const findM3u8 = async () => {
       // Wait up to 60 seconds for the real video source to appear
-      const maxRetries = 60; 
+      const maxRetries = 20; 
       const interval = 1000; // 1 second
 
       for (let i = 0; i < maxRetries; i++) {
@@ -112,28 +99,28 @@ export async function GET(req: NextRequest) {
         }
         
         // Try to click skip button if present
-        try {
-            const clicked = await page.evaluate(() => {
-                const buttons = Array.from(document.querySelectorAll('div, button, span, a'));
-                // Find button with "Skip" but NOT "after" (to avoid "Skip after 5s")
-                const skip = buttons.find(b => {
-                    const text = b.innerHTML?.toLowerCase() || '';
-                    return text.includes('skip') && !text.includes('after') && (text.includes('ad') || text.includes('intro'));
-                });
-                if (skip) {
-                    (skip as HTMLElement).click();
-                    return true;
-                }
-                return false;
-            });
+        // try {
+        //     const clicked = await page.evaluate(() => {
+        //         const buttons = Array.from(document.querySelectorAll('div, button, span, a'));
+        //         // Find button with "Skip" but NOT "after" (to avoid "Skip after 5s")
+        //         const skip = buttons.find(b => {
+        //             const text = b.innerHTML?.toLowerCase() || '';
+        //             return text.includes('skip') && !text.includes('after') && (text.includes('ad') || text.includes('intro'));
+        //         });
+        //         if (skip) {
+        //             skip.click();
+        //             return true;
+        //         }
+        //         return false;
+        //     });
             
-            if (clicked) {
-                // Wait a bit for transition
-                await new Promise(r => setTimeout(r, 2000));
-            }
-        } catch (e) {
-            // ignore
-        }
+        //     if (clicked) {
+        //         // Wait a bit for transition
+        //         await new Promise(r => setTimeout(r, 2000));
+        //     }
+        // } catch (e) {
+        //     // ignore
+        // }
         
         // Wait 1s
         await new Promise(r => setTimeout(r, interval));
