@@ -10,6 +10,7 @@ import { MediaItem } from '@/data/HandleRequests';
 // Components
 import MediaCard from '@/components/shared/mediaCard';
 import Title from '@/components/ui/title';
+import { Button } from '../ui/button';
 
 interface MoviesSliderProps {
   title: string;
@@ -59,12 +60,13 @@ export default function SectionSlider({ title, data, path }: MoviesSliderProps) 
       <div className='flex justify-between items-center mb-4'>
         <Title>{title}</Title>
         {path && (
-          <h3
-            className='text-primary hover:underline cursor-pointer text-xs md:text-sm'
+          <Button
+            variant='outline'
+            className='text-primary text-xs md:text-sm bg-transparent'
             onClick={() => router.push(`/section/${path}`)}
           >
-            عرض الكل...
-          </h3>
+            عرض الكل
+          </Button>
         )}
       </div>
 

@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Users, Plus, LogIn } from "lucide-react";
 
-export default function PartyControls({ mediaType, tmdbId }: { mediaType: string; tmdbId: string }) {
+export default function   PartyControls({ mediaType, tmdbId }: { mediaType: string; tmdbId: string }) {
   const router = useRouter();
   const [isJoinOpen, setIsJoinOpen] = useState(false);
   const [partyIdInput, setPartyIdInput] = useState("");

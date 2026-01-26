@@ -92,10 +92,10 @@ export async function GET(req: NextRequest) {
         if (src && src.includes('.m3u8')) {
            // 4. Extract and Filter
            // Filter out known ad domains
-           if (!src.includes('phim1280') && !src.includes('google') && !src.includes('promo')) {
-             // Optional: Check for known content patterns if possible, but exclusion is safer
+          //  if (!src.includes('phim1280') && !src.includes('google') && !src.includes('promo')) {
+          //    // Optional: Check for known content patterns if possible, but exclusion is safer
              return src;
-           }
+          //  }
         }
         
         // Try to click skip button if present

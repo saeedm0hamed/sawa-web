@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 
-// Firebase removed - will be replaced with Clerk
+// Firebase
 import { resetPassword } from "@/firebase/authActions"
 
 // UI Components
@@ -35,10 +35,10 @@ export default function ResetPasswordPage() {
   const onSubmit = async (data: FormData) => {
     setMessage('');
     const res = await resetPassword(data.email);
-    if (res) { // res.success
+    if (res.success) {
       setMessage('بعتنالك لينك على الإيميل، راجعه وكمّل من هناك.');
     } else {
-      if (!res) {
+      if (res.error === 'auth/user-not-found') {
         setMessage('الإيميل مش مرتبط بأي حساب.');
       } else {
         setMessage('في مشكلة حصلت، جرب تاني.');

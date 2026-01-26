@@ -6,7 +6,10 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
-// Firebase removed - will be replaced with Clerk
+// Firebase
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '@/firebase/firebaseConfig';
+import { getUserProfile } from '@/firebase/authActions';
 
 // UI Components
 import { Button } from '@/components/ui/button';
@@ -34,12 +37,21 @@ export default function Navbar({ queryS }: { queryS?: string }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
-  // Handle Auth State - Firebase removed, will be replaced with Clerk
+  // Handle Auth State
   useEffect(() => {
-    // No user for now - will be replaced with Clerk
-    setUser(null);
-    setProfile(null);
-    setIsLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setIsLoading(true);
+      if (firebaseUser) {
+        setUser(firebaseUser);
+        const userProfile = await getUserProfile(firebaseUser.uid);
+        setProfile(userProfile);
+      } else {
+        setUser(null);
+        setProfile(null);
+      }
+      setIsLoading(false);
+    });
+    return () => unsubscribe();
   }, []);
 
   // Handle Focus on Input
@@ -83,13 +95,13 @@ export default function Navbar({ queryS }: { queryS?: string }) {
   const renderAuthSection = (isMobile: boolean) => {
     if (isLoading) return null;
 
-    if (user && (!profile || Object.keys(profile).length <= 2)) {
-      return (
-        <Button variant='outline' onClick={() => router.push('/auth/complete-profile')}>
-          اكمال البيانات
-        </Button>
-      );
-    }
+    // if (user && (!profile || Object.keys(profile).length <= 2)) {
+    //   return (
+    //     <Button variant="outline" onClick={() => router.push("/auth/complete-profile")}>
+    //       اكمال البيانات
+    //     </Button>
+    //   )
+    // }
 
     if (user && profile && Object.keys(profile).length > 2) {
       return (
@@ -204,22 +216,14 @@ export default function Navbar({ queryS }: { queryS?: string }) {
           height={80}
           priority
           unoptimized
-          className='cursor-pointer brightness-95 '
+          className='cursor-pointer'
           onClick={() => router.push('/')}
         />
       </header>
 
       {/* Mobile Top Navbar */}
       <header className='md:hidden fixed w-full px-2 h-13 bg-gradient-to-b from-black/80 to-transparent rounded-b-xl flex items-center justify-between z-50'>
-        <Image
-          src='/images/sawa.png'
-          alt='logo'
-          className='brightness-95'
-          width={60}
-          height={60}
-          unoptimized
-          onClick={() => router.push('/')}
-        />
+        <Image src='/images/sawa.png' alt='logo' width={60} height={60} unoptimized onClick={() => router.push('/')} />
         <div className='flex gap-2 items-center w-full'>
           <div className='relative w-full mr-2' ref={searchContainerRef}>
             <div

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 // React
 import { useEffect, useState } from 'react';
@@ -10,7 +9,7 @@ import { useRouter } from 'next/navigation';
 // Icons
 import { CheckCircle } from 'lucide-react';
 
-// Firebase removed - will be replaced with Clerk/MongoDB
+// Firebase
 import { getCurrentUser, getUserProfile, logoutUser, sendVerificationLink } from '@/firebase/authActions';
 
 // Components
@@ -91,27 +90,24 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      // TODO: Replace with Clerk user check
       const user = await getCurrentUser();
 
-      if (!user) {
-        // For now, redirect to home if no user
+      if (user) {
+        setIsEmailVerified(user.emailVerified);
+      } else {
         router.replace('/');
         return;
       }
 
-      // TODO: Replace with MongoDB/Prisma user profile fetch
-      // const data = await getUserProfile(user.uid);
-      const data = null;
+      const data = await getUserProfile(user.uid);
       if (!data || Object.keys(data).length <= 1) {
         router.replace('/auth/complete-profile');
         return;
       }
 
-      // const GenersData = (await FetchByGenres(data.favoriteGenres)).slice(0, 15);
-      const GenersData = null;
+      const GenersData = (await FetchByGenres(data.favoriteGenres)).slice(0, 15);
 
-      // setFavGenersData(GenersData);
+      setFavGenersData(GenersData);
       setProfile(data);
       setUserChecked(true);
     };
@@ -174,7 +170,7 @@ export default function ProfilePage() {
               <Title>بيانات الحساب</Title>
 
               <div className='flex gap-2'>
-                <Button onClick={() => setEditOpen(true)} className='flex-1 rounded-xl'>
+                <Button onClick={() => setEditOpen(true)} className='flex-1 bg-amber-500 hover:bg-amber-500/50 rounded-xl'>
                   تعديل بياناتي
                 </Button>
                 <Button

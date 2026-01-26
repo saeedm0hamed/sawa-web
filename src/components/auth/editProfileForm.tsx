@@ -6,7 +6,9 @@ import { useState } from "react"
 // Next.js
 import Image from "next/image"
 
-// Firebase removed - will be replaced with Clerk/MongoDB
+// Firebase
+import { updateProfile } from "firebase/auth"
+import { auth } from "@/firebase/firebaseConfig"
 import { updateUserProfile } from "@/firebase/authActions"
 
 // Zod Schema & Form Controller
@@ -55,24 +57,26 @@ export default function EditProfileForm(
 
   // Handle form submission
   const onSubmit = async (data: FormData) => {
+    const user = auth.currentUser
+    if (!user) return
+
     setServerError("")
 
-    try {
-      // TODO: Replace with Clerk user ID and MongoDB/Prisma update
-      const mockUserId = "temp-user-id" // Will be replaced with Clerk user ID
+    // Update Firebase Auth profile with new name and avatar
+    await updateProfile(user, {
+      displayName: data.name,
+      photoURL: data.avatar,
+    })
 
-      // Update user profile - will be replaced with MongoDB/Prisma
-      await updateUserProfile(mockUserId, {
-        name: data.name,
-        birthdate: data.birthdate,
-        avatar: data.avatar,
-      })
+    // Update Firestore user profile document
+    await updateUserProfile(user.uid, {
+      name: data.name,
+      birthdate: data.birthdate,
+      avatar: data.avatar,
+    })
 
-      // Callback after success (optional)
-      onSuccess?.()
-    } catch (error: any) {
-      setServerError(error.message || "حدث خطأ أثناء التحديث")
-    }
+    // Callback after success (optional)
+    onSuccess?.()
   }
 
   return (

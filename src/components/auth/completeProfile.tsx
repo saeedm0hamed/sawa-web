@@ -7,7 +7,9 @@ import { useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 
-// Firebase removed - will be replaced with Clerk/MongoDB
+// Firebase
+import { updateProfile } from "firebase/auth"
+import { auth } from "@/firebase/firebaseConfig"
 import { saveUserProfile } from "@/firebase/authActions"
 
 // Zod Schema & Form Controller
@@ -56,32 +58,34 @@ export default function CompleteProfile() {
 
   // Handle form submission
   const handleSave = async (data: FormData) => {
+    const user = auth.currentUser
+    if (!user) return
+
     setServerError("")
 
-    try {
-      // TODO: Replace with Clerk user ID and MongoDB/Prisma save
-      const mockUserId = "temp-user-id" // Will be replaced with Clerk user ID
-      
-      // Save profile data - will be replaced with MongoDB/Prisma
-      await saveUserProfile(mockUserId, {
-        uid: mockUserId,
-        name: data.name,
-        birthdate: data.birthdate,
-        avatar: data.avatar,
-        favoriteGenres: data.favoriteGenres
-          .map((name) => genreMap[name])
-          .filter((id) => id !== undefined),
-        email: "", // Will come from Clerk
-        provider: "unknown",
-        isEmailVerified: false,
-        createdAt: new Date().toISOString(),
-      })
+    // Update Firebase auth profile display name and avatar
+    await updateProfile(user, {
+      displayName: data.name,
+      photoURL: data.avatar,
+    })
 
-      // Redirect to home after saving
-      router.push("/")
-    } catch (error: any) {
-      setServerError(error.message || "حدث خطأ أثناء الحفظ")
-    }
+    // Save profile data to Firestore with mapped genre IDs
+    await saveUserProfile(user.uid, {
+      uid: user.uid,
+      name: data.name,
+      birthdate: data.birthdate,
+      avatar: data.avatar,
+      favoriteGenres: data.favoriteGenres
+        .map((name) => genreMap[name])
+        .filter((id) => id !== undefined),
+      email: user.email || "",
+      provider: user.providerData[0]?.providerId || "unknown",
+      isEmailVerified: user.emailVerified,
+      createdAt: user.metadata.creationTime || "",
+    })
+
+    // Redirect to home after saving
+    router.push("/")
   }
 
   // Update selected avatar and form value

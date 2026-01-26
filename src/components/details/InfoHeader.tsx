@@ -64,7 +64,7 @@ export default function InfoHeader({ main }: { main: FullDetailsType['main'] }) 
             icon={LayoutList}
             value={
               <span className='flex flex-wrap items-center gap-1'>
-                {main.genres.map((g, i, arr) => (
+                {main.genres.slice(0,3).map((g, i, arr) => (
                   <React.Fragment key={g.id}>
                     <span>{g.name}</span>
                     {i < arr.length - 1 && <span className='w-2 h-2 rounded-full bg-white/60 mx-1 inline-block' />}
