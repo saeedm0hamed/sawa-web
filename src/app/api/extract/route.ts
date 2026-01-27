@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   if (!tmdb || !isValidTmdb(tmdb)) {
     return NextResponse.json({ error: 'Invalid tmdb. Must be a numeric ID' }, { status: 400 });
   }
-
+// https://multiembed.mov/?video_id=385687&tmdb=1
   const targetUrl = `https://player.autoembed.cc/embed/${type}/${tmdb}`;
   let browser;
 

@@ -61,10 +61,10 @@ export default function HeroSection({ data }: { data: MediaItem[] }) {
 
   // Render up to two genres with separator dots
   const renderGenres = (genres: string[] | number[]) =>
-    genres.slice(0, 2).map((g, i) => (
-      <h2 key={i} className="flex items-center gap-2">
+    genres.slice(0, 3).map((g, i) => (
+      <h2 key={i} className="flex flex-row-reverse items-center gap-2">
+        {i < genres.length - 3 && <span className="w-2 h-2 bg-white/50 rounded-full" />}
         {g}
-        {i < genres.length - 1 && <span className="w-2 h-2 bg-white/50 rounded-full" />}
       </h2>
     ));
 

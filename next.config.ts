@@ -27,6 +27,9 @@ const nextConfig: NextConfig = {
     }
     return config;
   },
+  turbopack: {
+    // silence the error about using webpack config with turbopack
+  },
 };
 
 export default nextConfig;

@@ -5,6 +5,7 @@ type PlaybackState = {
   currentTime: number;
   lastUpdatedAt: number;
   playbackRate: number;
+  version: number; // For synchronization
 };
 
 export default class Server implements Party.Server {
@@ -16,6 +17,7 @@ export default class Server implements Party.Server {
     currentTime: 0,
     lastUpdatedAt: Date.now(),
     playbackRate: 1,
+    version: 0,
   };
 
   constructor(readonly room: Party.Room) {}
@@ -39,7 +41,7 @@ export default class Server implements Party.Server {
 
     conn.send(JSON.stringify({
         type: 'system',
-        message: 'Welcome to the party!',
+        message: 'أهلا بك في الغرفة!',
         timestamp: Date.now()
     }));
   }
@@ -52,34 +54,100 @@ export default class Server implements Party.Server {
   onMessage(message: string, sender: Party.Connection) {
     try {
       const data = JSON.parse(message);
+      const timestamp = Date.now();
       
-      // Update server state based on events
-      if (data.type === 'play') {
-        this.state.isPlaying = true;
-        this.state.currentTime = data.payload.currentTime;
-        this.state.lastUpdatedAt = Date.now();
-        this.room.broadcast(message); // Broadcast to others
-      } else if (data.type === 'pause') {
-        this.state.isPlaying = false;
-        this.state.currentTime = data.payload.currentTime;
-        this.state.lastUpdatedAt = Date.now();
-        this.room.broadcast(message);
-      } else if (data.type === 'seek') {
-        this.state.currentTime = data.payload.currentTime;
-        this.state.lastUpdatedAt = Date.now();
-        this.room.broadcast(message);
-      } else if (data.type === 'chat') {
-        this.room.broadcast(message);
-      } else if (data.type === 'ping') {
-        sender.send(JSON.stringify({
-            type: 'pong',
-            id: data.id,
-            timestamp: Date.now()
-        }));
+      switch (data.type) {
+        case 'play':
+            this.handlePlay(sender, data.payload, timestamp);
+            break;
+        case 'pause':
+            this.handlePause(sender, data.payload, timestamp);
+            break;
+        case 'seek':
+            this.handleSeek(sender, data.payload, timestamp);
+            break;
+        case 'chat':
+            // Broadcast chat messages
+            // Ensure senderId is set correctly by the server
+            const chatMessage = { 
+                ...data, 
+                senderId: sender.id, // Enforce sender ID from connection
+                timestamp 
+            };
+            this.room.broadcast(JSON.stringify(chatMessage));
+            break;
+        case 'ping':
+            sender.send(JSON.stringify({
+                type: 'pong',
+                id: data.id,
+                timestamp
+            }));
+            break;
+        case 'sync_req':
+            sender.send(JSON.stringify({
+                type: 'sync',
+                state: this.state,
+                timestamp
+            }));
+            break;
+        default:
+            console.warn(`Unknown message type: ${data.type} from ${sender.id}`);
       }
     } catch (e) {
       console.error("Error parsing message", e);
     }
+  }
+
+  handlePlay(sender: Party.Connection, payload: any, timestamp: number) {
+      this.state.isPlaying = true;
+      this.state.currentTime = payload.currentTime;
+      this.state.lastUpdatedAt = timestamp;
+      this.state.version++;
+
+      this.broadcastState('play', sender.id);
+  }
+
+  handlePause(sender: Party.Connection, payload: any, timestamp: number) {
+      // 1. State Validation: If already paused, ignore to prevent false positives
+      if (!this.state.isPlaying) {
+          console.log(`[Pause] Ignored false pause from ${sender.id}. Server already paused.`);
+          
+          // 2. Synchronization: Send correct state back to the sender so they get in sync
+          // This acts as a NACK (Negative Acknowledgment) + State Correction
+          sender.send(JSON.stringify({
+              type: 'sync',
+              state: this.state,
+              timestamp
+          }));
+          return;
+      }
+
+      this.state.isPlaying = false;
+      this.state.currentTime = payload.currentTime;
+      this.state.lastUpdatedAt = timestamp;
+      this.state.version++;
+
+      this.broadcastState('pause', sender.id);
+  }
+
+  handleSeek(sender: Party.Connection, payload: any, timestamp: number) {
+      this.state.currentTime = payload.currentTime;
+      this.state.lastUpdatedAt = timestamp;
+      this.state.version++;
+      
+      this.broadcastState('seek', sender.id);
+  }
+
+  broadcastState(type: string, senderId: string) {
+      this.room.broadcast(JSON.stringify({
+          type,
+          payload: {
+              currentTime: this.state.currentTime,
+              version: this.state.version
+          },
+          senderId,
+          timestamp: Date.now()
+      }));
   }
 
   broadcastUserCount() {

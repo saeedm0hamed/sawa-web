@@ -6,10 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Heart, TvMinimalPlay, User, Users } from 'lucide-react';
 import InfoHeader from '@/components/details/InfoHeader';
 import { FullDetailsType } from '@/data/single_requests/fetch_details';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { SplitText } from 'gsap/SplitText';
 import { useRouter } from 'next/navigation';
+import FetchUrl from '@/data/single_requests/fetch_url';
+import PartyControls from '../watch/PartyControls';
 
 gsap.registerPlugin(SplitText);
 
@@ -18,15 +20,11 @@ export default function InfoSection({
   isLoading,
   isFavorite,
   toggleFavorite,
-  isMobile,
-  hasStream,
 }: {
   main: FullDetailsType['main'];
   isLoading: boolean;
   isFavorite: boolean;
   toggleFavorite: () => void;
-  isMobile: boolean;
-  hasStream: boolean;
 }) {
   const sectionRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -35,6 +33,26 @@ export default function InfoSection({
   const buttonRef = useRef<HTMLDivElement>(null);
   const posterRef = useRef<HTMLImageElement>(null);
   const router = useRouter();
+
+  const [hasStream, setHasStream] = useState<boolean>(false);
+  const [checkingStream, setCheckingStream] = useState<boolean>(true);
+
+  useEffect(() => {
+    const checkStream = async () => {
+      try {
+        const typeSlug = main.type === 'فيلم' ? 'movie' : 'tv';
+        const url = await FetchUrl(typeSlug, main.id.toString());
+        setHasStream(!!url);
+      } catch (error) {
+        console.error('Failed to check stream:', error);
+        setHasStream(false);
+      } finally {
+        setCheckingStream(false);
+      }
+    };
+
+    checkStream();
+  }, [main.id, main.type]);
 
   useEffect(() => {
     if (!sectionRef.current) return;
@@ -59,11 +77,6 @@ export default function InfoSection({
   }, []);
 
   const handleWatchClick = () => {
-    const typeSlug = main.type == 'فيلم' ? 'movie' : 'tv';
-    router.push(`/watch/${typeSlug}/${main.id}`);
-  };
-
-  const handlePartyClick = () => {
     const typeSlug = main.type == 'فيلم' ? 'movie' : 'tv';
     router.push(`/watch/${typeSlug}/${main.id}`);
   };
@@ -97,17 +110,17 @@ export default function InfoSection({
           </h1>
           <p
             ref={overviewRef}
-            className='overview invisible text-sm md:text-base text-white/90 w-full xl:w-1/2 text-right'
+            className='overview invisible text-sm md:text-base text-white/90 w-full xl:w-full text-right text-pretty'
           >
             {main.overview || 'لا يوجد وصف متاح لهذا العمل.'}
           </p>
           <div ref={infoHeaderRef} className='info-header mt-auto invisible'>
             <InfoHeader main={main} />
           </div>
-          <div ref={buttonRef} className='button invisible flex gap-2'>
+          <div ref={buttonRef} className='button invisible flex flex-col md:flex-row gap-2'>
             <Button
               onClick={toggleFavorite}
-              className='w-1/2 xl:w-[14rem] border border-white/10 bg-white/5 hover:bg-white/10 text-white/90 rounded-lg flex items-center justify-center gap-2'
+              className='w-3xs xl:w-[14rem] border border-white/10 bg-white/5 hover:bg-white/10 text-white/90 rounded-lg flex items-center justify-center gap-2'
               disabled={isLoading}
             >
               {isLoading ? (
@@ -122,26 +135,27 @@ export default function InfoSection({
                 </>
               )}
             </Button>
-            {hasStream && (
-            <>
+            {checkingStream ? (
               <Button
-                type='button'
-                onClick={handleWatchClick}
-                className='w-1/2 xl:w-xs border border-white/10 bg-white/5 hover:bg-white/10 text-white/90 rounded-lg flex items-center justify-center gap-2'
+                disabled
+                className='w-1/2 xl:w-xs border border-white/10 bg-white/5 text-white/50 rounded-lg flex items-center justify-center gap-2'
               >
-                مشاهدة فردية
-                <User size={16} className='text-white/80' />
+                <div className='w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin' />
               </Button>
-              <Button
-                type='button'
-                onClick={handlePartyClick}
-                className='w-1/2 xl:w-xs border border-white/10 bg-white/5 hover:bg-white/10 text-white/90 rounded-lg flex items-center justify-center gap-2'
-              >
-                مشاهدة جماعية
-                <Users size={16} className='text-white/80' />
-              </Button>
-            </>
-            )}
+            ) : hasStream ? (
+              <>
+                <Button
+                  type='button'
+                  onClick={handleWatchClick}
+                  className='w-3xs xl:w-2xs border border-white/10 bg-white/5 hover:bg-white/10 text-white/90 rounded-lg flex items-center justify-center gap-2'
+                >
+                  <TvMinimalPlay size={16} className='text-white/80' />
+                  مشاهدة فردية
+                  <User size={16} className='text-white/80' />
+                </Button>
+                <PartyControls mediaType={main.type == 'فيلم' ? 'movie' : 'tv'} tmdbId={main.id.toString()} />
+              </>
+            ) : null}
           </div>
         </div>
       </div>

@@ -8,13 +8,6 @@ const socialLinks = [
   { href: 'https://linkedin.com/in/saeedm0hamed/', icon: '/images/icons/linkedin.png', label: 'لينكدان' },
 ];
 
-const quickLinks = [
-  { href: '/', label: 'الرئيسية' },
-  { href: '/section/latest', label: 'أحدث الإضافات' },
-  { href: '/profile', label: 'حسابي' },
-  { href: '/auth/login', label: 'تسجيل الدخول' },
-];
-
 export default function Footer() {
   return (
     <footer className='relative mt-8 px-4 md:px-8 bg-gradient-to-b from-[#ffffff08] to-[#ffffff15] backdrop-blur-xl border-t border-white/10 z-20 overflow-hidden'>
@@ -24,7 +17,8 @@ export default function Footer() {
       <div className='absolute bottom-16 left-12 w-20 h-20 bg-blue-500/10 rounded-full blur-2xl animate-pulse delay-1000'></div>
 
       <div className='relative py-6 md:py-8 pb-14'>
-        <div className='grid grid-cols-1 m  d:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-4 md:mb-6'>
+        <div className='flex flex-col md:flex-row gap-8 md:gap-96 justify-center md:items-center items-start'>
+          {/* Entity 1 */}
           <div className='lg:col-span-1 space-y-2 md:space-y-4'>
             <div className='flex items-center gap-3 group'>
               <div className='relative'>
@@ -46,13 +40,25 @@ export default function Footer() {
             </div>
           </div>
 
-          <div className='space-y-2 md:space-y-4'>
-            <h3 className='text-md font-bold text-white relative pb-2'>
+          {/* Entity 2 */}
+          <div className='pt-2 order-3 md:order-2 md:border-none border-t border-white/10'>
+            <div className='flex flex-col md:flex-row justify-between items-center gap-3'>
+              <div className='text-center md:text-right'>
+                <p className='text-white/70 text-xs md:text-sm' dir='ltr'>
+                  © {new Date().getFullYear()} <span className='text-primary font-medium'>Sawa</span> كل الحقوق محفوظة
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Entity 3 */}
+          <div className='space-y-2'>
+            <h3 className='text-md md:text-center font-bold text-white relative pb-2'>
               تواصل معنا
-              <div className='absolute bottom-0 right-0 w-1/2 h-0.5 bg-gradient-to-r from-primary/0 to-primary rounded-full'></div>
+              <div className='absolute bottom-0 right-0 w-full h-0.5 bg-primary rounded-full'></div>
             </h3>
 
-            <div className='grid grid-cols-5 gap-2'>
+            <div className='flex justify-center space-x-4 flex-wrapace-x-4 flex-wrap'>
               <TooltipProvider>
                 {socialLinks.map((social, index) => (
                   <Tooltip key={index}>
@@ -78,16 +84,6 @@ export default function Footer() {
                   </Tooltip>
                 ))}
               </TooltipProvider>
-            </div>
-          </div>
-
-          <div className='pt-2'>
-            <div className='flex flex-col md:flex-row justify-between items-center gap-3'>
-              <div className='text-center md:text-right'>
-                <p className='text-white/70 text-xs md:text-sm'>
-                  © {new Date().getFullYear()} <span className='text-primary font-medium'>Sawa</span> كل الحقوق محفوظة.
-                </p>
-              </div>
             </div>
           </div>
         </div>

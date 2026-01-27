@@ -103,11 +103,12 @@ export default async function FetchFullDetails(
       fetchFromTMDB(`/${type}/${id}/videos`, ""),
       fetchFromTMDB(`/${type}/${id}/credits`, "&language=en"),
       fetchFromTMDB(`/${type}/${id}/recommendations`, "&language=en"),
-      fetchFromTMDB(`/${type}/${id}/reviews`)
+      fetchFromTMDB(`/${type}/${id}/reviews`),
+      fetchFromTMDB(`/${type}/${id}`, "&language=ar"),
     ]);
 
     // Extract data if successful
-    const [main, images, videos, credits, recommendations, reviews] = results.map(
+    const [main, images, videos, credits, recommendations, reviews, mainAr] = results.map(
       (res) => (res.status === "fulfilled" ? res.value : null)
     );
 
@@ -130,6 +131,8 @@ export default async function FetchFullDetails(
     // Build main details with full image URLs
     const mainDetails: MainDetails = {
       ...main,
+      overview: mainAr?.overview || main.overview,
+      genres: mainAr?.genres?.length ? mainAr.genres : main.genres,
       backdrop_path: main.backdrop_path
         ? `https://image.tmdb.org/t/p/original${main.backdrop_path}`
         : null,

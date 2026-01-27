@@ -18,7 +18,7 @@ export const InfoRow = ({
   <li className='flex border-b border-white/10 p-1.5 w-full xl:w-1/2 opacity-0 info-row'>
     {Icon && <Icon size={18} className='text-white/90 mt-1 ml-2' />}
     <span className='text-white/90'>{label}&nbsp;:&nbsp;</span>
-    <span className='text-white/80'>{value}</span>
+    <span className='text-white/80' dir='ltr'>{value}</span>
   </li>
 );
 export default function InfoHeader({ main }: { main: FullDetailsType['main'] }) {
@@ -46,7 +46,7 @@ export default function InfoHeader({ main }: { main: FullDetailsType['main'] }) 
       <ul className='text-sm md:text-base text-white/90 space-y-1' dir='rtl'>
         <InfoRow label='النوع' value={main.type} icon={Film} />
         <InfoRow label='اللغة' value={getLanguageName(main.original_language)} icon={Languages} />
-        {main.tagline && <InfoRow label='الاقتباس' value={main.tagline} icon={Quote} />}
+        {main.tagline && <InfoRow label='الاقتباس' value={main.tagline} icon={Quote} /> }
         <InfoRow label='التقييم' value={main.vote_average} icon={Star} />
         {main.runtime && <InfoRow label='المدة' value={`${main.runtime} دقيقة`} icon={Clock} />}
         {main.number_of_seasons && <InfoRow label='عدد المواسم' value={main.number_of_seasons} icon={Layers} />}

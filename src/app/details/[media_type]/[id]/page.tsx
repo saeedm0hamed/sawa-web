@@ -7,7 +7,6 @@ import FetchDetails from '@/data/single_requests/fetch_details';
 // App Components
 import DetailsContent from '@/components/details/DetailsContent';
 import Head from 'next/head';
-import FetchUrl from '@/data/single_requests/fetch_url';
 
 export default async function MediaDetailsPage({ params }: { params: Promise<{ id: string; media_type: string }> }) {
   const { id, media_type } = await params;
@@ -15,7 +14,6 @@ export default async function MediaDetailsPage({ params }: { params: Promise<{ i
   if (media_type !== 'movie' && media_type !== 'tv') return notFound();
 
   const data = await FetchDetails(id, media_type);
-  const streamUrl = await FetchUrl(media_type, id);
 
   return (
     <>
@@ -178,7 +176,7 @@ export default async function MediaDetailsPage({ params }: { params: Promise<{ i
         />
       </Head>
 
-      <DetailsContent item={data!} hasStream={streamUrl ? true : false}/>
+      <DetailsContent item={data!} />
     </>
   );
 }

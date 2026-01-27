@@ -1,4 +1,5 @@
 'use client';
+
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -20,7 +21,7 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { addToFavorites, removeFromFavorites, checkIsFavorite, addToRecentViews } from '@/firebase/databaseActios';
 import Footer from '../shared/footer';
 
-export default function DetailsContent({ item, hasStream }: { item: FullDetailsType; hasStream: boolean }) {
+export default function DetailsContent({ item }: { item: FullDetailsType;}) {
   const { main, media, recommendation, reviews } = item;
   const [isMobile, setIsMobile] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -150,14 +151,13 @@ export default function DetailsContent({ item, hasStream }: { item: FullDetailsT
         <div className='absolute inset-0 bg-black/60 backdrop-blur-3xl' />
       </div>
 
-      <main className='flex-1 w-full relative z-10'>
+      <main className="flex-1 w-full relative z-10">
         <InfoSection
           main={main}
           isLoading={isLoading}
           isFavorite={isFavorite}
           toggleFavorite={toggleFavorite}
-          isMobile={isMobile}
-          hasStream={hasStream}
+          // isMobile={isMobile}
         />
 
         <div className='mx-4 md:mx-8 flex flex-col gap-3 md:gap-5'>
