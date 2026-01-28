@@ -13,12 +13,11 @@ import { getUserProfile } from '@/firebase/authActions';
 
 // UI Components
 import { Button } from '@/components/ui/button';
-import { Search, Home, Film, Tv, Clock } from 'lucide-react';
+import { Search, Film, Tv, Clock } from 'lucide-react';
 
 const iconSize = 'w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7';
 
 const navLinks = [
-  { label: 'الرئيسية', icon: Home, path: '/' },
   { label: 'الأحدث', icon: Clock, path: '/section/latest' },
   { label: 'الأفلام', icon: Film, path: '/section/popular_movies' },
   { label: 'المسلسلات', icon: Tv, path: '/section/popular_series' },
@@ -132,7 +131,7 @@ export default function Navbar({ queryS }: { queryS?: string }) {
     navLinks.map((link, i) => (
       <li
         key={i}
-        className='cursor-pointer hover:text-primary duration-200 text-sm xl:text-base'
+        className='cursor-pointer hover:text-primary duration-200 text-sm xl:text-base drop-shadow-primary hover:drop-shadow-white/40 drop-shadow-xs'
         onClick={() => router.push(link.path)}
       >
         {link.label}
@@ -208,7 +207,6 @@ export default function Navbar({ queryS }: { queryS?: string }) {
             </Button>
           </div>
         </div>
-        <ul className='flex items-center gap-5'>{renderDesktopLinks()}</ul>
         <Image
           src='/images/sawa.png'
           alt='logo'
@@ -216,9 +214,10 @@ export default function Navbar({ queryS }: { queryS?: string }) {
           height={80}
           priority
           unoptimized
-          className='cursor-pointer'
+          className='cursor-pointer mr-auto ml-78'
           onClick={() => router.push('/')}
         />
+        <ul className='flex items-center gap-5'>{renderDesktopLinks()}</ul>
       </header>
 
       {/* Mobile Top Navbar */}

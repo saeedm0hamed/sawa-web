@@ -19,12 +19,11 @@ type PlaybackState = {
   isPlaying: boolean;
   currentTime: number;
   lastUpdatedAt: number;
-  playbackRate: number;
-  version?: number;
 };
 
 // Use localhost:1999 for dev, or infer from environment
-const PARTYKIT_HOST = process.env.NEXT_PUBLIC_PARTYKIT_HOST || 'localhost:1999';
+const PARTYKIT_HOST =
+  'localhost:1999';
 
 export default function PartyRoom({
   partyId,
@@ -42,7 +41,6 @@ export default function PartyRoom({
   const [userCount, setUserCount] = useState(1);
   const [chatInput, setChatInput] = useState('');
   const [showPauseIndicator, setShowPauseIndicator] = useState(false);
-  const [latency, setLatency] = useState(0);
 
   // We'll generate a random user ID for this session
   const [userId] = useState(() => 'user-' + Math.random().toString(36).substring(2, 9));
@@ -50,72 +48,62 @@ export default function PartyRoom({
   const videoRef = useRef<HTMLVideoElement>(null);
   const isRemoteUpdate = useRef(false);
   const lastServerState = useRef<PlaybackState | null>(null);
-  const lastLocalSyncTime = useRef<number>(0);
-  const lastLocalInteractionTime = useRef<number>(0);
 
   const socket = usePartySocket({
     host: PARTYKIT_HOST,
     room: partyId,
+    id: userId,
     onOpen() {
       setIsConnected(true);
-      // Measure latency on connect
-      const start = Date.now();
-      socket.send(JSON.stringify({ type: 'ping', id: start }));
+      console.log('Connected to PartyKit');
     },
     onClose() {
       setIsConnected(false);
+      console.log('Disconnected from PartyKit');
     },
     onMessage(event) {
       try {
         const data = JSON.parse(event.data);
 
-        // Handle different event types
-        if (data.type === 'system') {
-          setMessages((prev) => [
-            ...prev,
-            {
+        switch (data.type) {
+          case 'sync':
+            lastServerState.current = data.state;
+            applyState(data.state, true); // Force apply on sync
+            break;
+
+          case 'play':
+          case 'pause':
+          case 'seek':
+            lastServerState.current = data.state;
+            // Only apply if it wasn't sent by us
+            if (data.senderId !== userId) {
+              applyState(data.state, false);
+            }
+            break;
+
+          case 'chat':
+            addMessage({
+              id: Date.now().toString(),
+              senderId: data.senderId,
+              text: data.text,
+              type: 'chat',
+              timestamp: data.timestamp,
+            });
+            break;
+
+          case 'system':
+            addMessage({
               id: Date.now().toString(),
               senderId: 'System',
               text: data.message,
               type: 'system',
               timestamp: data.timestamp,
-            },
-          ]);
-        } else if (data.type === 'update_users') {
-          setUserCount(data.count);
-        } else if (data.type === 'chat') {
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: Date.now().toString(),
-              senderId: data.senderId,
-              text: data.payload.text,
-              type: 'chat',
-              timestamp: data.timestamp,
-            },
-          ]);
-        } else if (data.type === 'pong') {
-          const rtt = Date.now() - data.id;
-          setLatency(rtt / 2);
-          // console.log('Latency:', rtt / 2);
-        } else if (data.type === 'sync') {
-          handleSync(data.state);
-        } else if (['play', 'pause', 'seek'].includes(data.type)) {
-          // Update server state reference
-          const newState: PlaybackState = {
-            isPlaying: data.type === 'play',
-            currentTime: data.payload.currentTime,
-            lastUpdatedAt: data.timestamp,
-            playbackRate: 1,
-            version: data.payload.version,
-          };
-          lastServerState.current = newState;
-          lastLocalSyncTime.current = Date.now();
+            });
+            break;
 
-          // Ignore our own events for direct control, but update state above
-          if (data.senderId === userId) return;
-
-          handleRemoteMediaEvent(data.type, data.payload);
+          case 'update_users':
+            setUserCount(data.count);
+            break;
         }
       } catch (err) {
         console.error('Failed to parse PartyKit message', err);
@@ -123,210 +111,111 @@ export default function PartyRoom({
     },
   });
 
-  const handleSync = (state: PlaybackState) => {
-    lastServerState.current = state;
-    lastLocalSyncTime.current = Date.now();
+  const addMessage = (msg: Message) => {
+    setMessages((prev) => [...prev.slice(-99), msg]);
+  };
 
+  const applyState = (state: PlaybackState, force: boolean) => {
     const video = videoRef.current;
     if (!video) return;
 
+    // Calculate where the video SHOULD be right now
+    const now = Date.now();
+    const timeElapsed = (now - state.lastUpdatedAt) / 1000;
+    const targetTime = state.currentTime + (state.isPlaying ? timeElapsed : 0);
+
+    // Block local events from triggering updates
     isRemoteUpdate.current = true;
 
-    // Calculate target time compensating for latency if playing
-    // We use 0 latency assumption for simplicity or use the measured latency
-    const targetTime = state.currentTime + (state.isPlaying ? latency / 1000 : 0);
-
-    if (Math.abs(video.currentTime - targetTime) > 0.5) {
+    // 1. Sync Time
+    // Only seek if difference is significant (> 0.5s) or if forced (initial sync)
+    if (force || Math.abs(video.currentTime - targetTime) > 0.5) {
+      console.log(`[Sync] Seeking to ${targetTime.toFixed(2)}`);
       video.currentTime = targetTime;
     }
 
+    // 2. Sync Play/Pause State
     if (state.isPlaying) {
-      video.play().catch(() => {});
-      setShowPauseIndicator(false);
-    } else {
-      video.pause();
-      setShowPauseIndicator(true);
-    }
-
-    setTimeout(() => {
-      isRemoteUpdate.current = false;
-    }, 500);
-  };
-
-  const handleRemoteMediaEvent = (type: string, payload: any) => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    isRemoteUpdate.current = true;
-
-    if (type === 'play') {
-      // Sync time if significantly different (> 0.5s)
-      // Add latency compensation
-      const targetTime = payload.currentTime + latency / 1000;
-      if (Math.abs(video.currentTime - targetTime) > 0.5) {
-        video.currentTime = targetTime;
+      if (video.paused) {
+        console.log('[Sync] Playing');
+        video.play().catch((e) => console.error('Play error:', e));
+        setShowPauseIndicator(false);
       }
-      video.play().catch(() => {});
-      setShowPauseIndicator(false);
-    } else if (type === 'pause') {
-      video.pause();
-      video.currentTime = payload.currentTime;
-      setShowPauseIndicator(true);
-    } else if (type === 'seek') {
-      video.currentTime = payload.currentTime;
+    } else {
+      if (!video.paused) {
+        console.log('[Sync] Pausing');
+        video.pause();
+        setShowPauseIndicator(true);
+      }
     }
 
-    // Reset flag after a short delay
+    // Reset flag after a delay to allow events to fire and settle
     setTimeout(() => {
       isRemoteUpdate.current = false;
     }, 500);
   };
 
-  // Drift correction loop
+  // Periodic Sync Check (Heartbeat)
+  // Ensures that if a client drifts significantly, they get pulled back
   useEffect(() => {
     const interval = setInterval(() => {
       if (!lastServerState.current || !videoRef.current || !isConnected) return;
-
-      // Skip drift check if user interacted recently (2s buffer)
-      if (Date.now() - lastLocalInteractionTime.current < 2000) return;
-
+      
       const state = lastServerState.current;
       const video = videoRef.current;
 
-      // Only check drift if server thinks we are playing
+      // Only force sync if we are supposed to be playing
       if (state.isPlaying) {
-        // Expected time = state.currentTime + (time since last local sync)
-        const timeSinceSync = (Date.now() - lastLocalSyncTime.current) / 1000;
-        const expectedTime = state.currentTime + timeSinceSync;
-
-        // Check drift
-        const drift = Math.abs(video.currentTime - expectedTime);
-
-        // If drift is large (> 1s), snap to expected time
-        if (drift > 1.0) {
-          console.log(`[Drift] Correcting drift of ${drift.toFixed(2)}s. Target: ${expectedTime.toFixed(2)}`);
-          isRemoteUpdate.current = true;
-          video.currentTime = expectedTime;
-          if (video.paused) video.play().catch(() => {});
-
-          setTimeout(() => {
-            isRemoteUpdate.current = false;
-          }, 500);
-        }
-      } else {
-        // Server is paused
-
-        // 1. Enforce Pause State
-        if (!video.paused) {
-          console.log(`[Drift] Force Pause. Server is paused but video is playing.`);
-          isRemoteUpdate.current = true;
-          video.pause();
-          setShowPauseIndicator(true);
-
-          setTimeout(() => {
-            isRemoteUpdate.current = false;
-          }, 500);
-        }
-
-        // 2. Enforce Time Sync (even when paused)
-        const drift = Math.abs(video.currentTime - state.currentTime);
-        if (drift > 1.0) {
-          console.log(
-            `[Drift] Correcting paused time drift of ${drift.toFixed(2)}s. Target: ${state.currentTime.toFixed(2)}`,
-          );
-          isRemoteUpdate.current = true;
-          video.currentTime = state.currentTime;
-
-          setTimeout(() => {
-            isRemoteUpdate.current = false;
-          }, 500);
-        }
+         const now = Date.now();
+         const timeElapsed = (now - state.lastUpdatedAt) / 1000;
+         const targetTime = state.currentTime + timeElapsed;
+         
+         if (Math.abs(video.currentTime - targetTime) > 1.5) {
+             console.log('[Heartbeat] Drift detected, resyncing...');
+             applyState(state, true);
+         }
       }
-    }, 1000);
+    }, 2000);
+
     return () => clearInterval(interval);
-  }, [isConnected, latency]);
+  }, [isConnected]);
 
-  const broadcastEvent = (type: string, payload: any) => {
-    socket.send(
-      JSON.stringify({
-        type,
-        payload,
-        senderId: userId,
-      }),
-    );
-  };
-
+  // User Interaction Handlers
   const onPlay = () => {
+    if (isRemoteUpdate.current) return;
     console.log('[User] Play');
-    lastLocalInteractionTime.current = Date.now();
+    
+    // Optimistic update logic could go here, but let's keep it simple:
+    // Just tell server.
+    socket.send(JSON.stringify({
+        type: 'play',
+        payload: { currentTime: videoRef.current?.currentTime || 0 }
+    }));
     setShowPauseIndicator(false);
-
-    // Optimistic Update: Assume server will accept play
-    if (lastServerState.current) {
-      lastServerState.current = {
-        ...lastServerState.current,
-        isPlaying: true,
-        currentTime: videoRef.current?.currentTime || 0,
-        lastUpdatedAt: Date.now(),
-      };
-      lastLocalSyncTime.current = Date.now();
-    }
-
-    if (isRemoteUpdate.current) {
-      console.log('[User] Play ignored (Remote Update)');
-      return;
-    }
-    const video = videoRef.current;
-    broadcastEvent('play', { currentTime: video?.currentTime || 0 });
   };
 
   const onPause = () => {
+    if (isRemoteUpdate.current) return;
     console.log('[User] Pause');
-    lastLocalInteractionTime.current = Date.now();
+    
+    socket.send(JSON.stringify({
+        type: 'pause',
+        payload: { currentTime: videoRef.current?.currentTime || 0 }
+    }));
     setShowPauseIndicator(true);
-
-    // Optimistic Update: Assume server will accept pause
-    if (lastServerState.current) {
-      lastServerState.current = {
-        ...lastServerState.current,
-        isPlaying: false,
-        currentTime: videoRef.current?.currentTime || 0,
-        lastUpdatedAt: Date.now(),
-      };
-      lastLocalSyncTime.current = Date.now();
-    }
-
-    if (isRemoteUpdate.current) {
-      console.log('[User] Pause ignored (Remote Update)');
-      return;
-    }
-    const video = videoRef.current;
-    broadcastEvent('pause', { currentTime: video?.currentTime || 0 });
   };
 
   const onSeeked = () => {
+    if (isRemoteUpdate.current) return;
     console.log('[User] Seeked');
-    lastLocalInteractionTime.current = Date.now();
-
-    // Optimistic Update: Update time but keep current playing state
-    if (lastServerState.current) {
-      lastServerState.current = {
-        ...lastServerState.current,
-        currentTime: videoRef.current?.currentTime || 0,
-        lastUpdatedAt: Date.now(),
-      };
-      lastLocalSyncTime.current = Date.now();
-    }
-
-    if (isRemoteUpdate.current) {
-      console.log('[User] Seek ignored (Remote Update)');
-      return;
-    }
-    const video = videoRef.current;
-    broadcastEvent('seek', { currentTime: video?.currentTime || 0 });
+    
+    socket.send(JSON.stringify({
+        type: 'seek',
+        payload: { currentTime: videoRef.current?.currentTime || 0 }
+    }));
   };
 
-  // Attach event listeners to video ref
+  // Attach event listeners manually to control 'isRemoteUpdate' check precisely
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -336,17 +225,20 @@ export default function PartyRoom({
     video.addEventListener('seeked', onSeeked);
 
     return () => {
-      video.removeEventListener('play', onPlay);
-      video.removeEventListener('pause', onPause);
-      video.removeEventListener('seeked', onSeeked);
+        video.removeEventListener('play', onPlay);
+        video.removeEventListener('pause', onPause);
+        video.removeEventListener('seeked', onSeeked);
     };
-  }, []);
+  }, []); // Empty deps = run once on mount
 
   const sendChat = (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatInput.trim()) return;
 
-    broadcastEvent('chat', { text: chatInput });
+    socket.send(JSON.stringify({
+        type: 'chat',
+        text: chatInput
+    }));
     setChatInput('');
   };
 
@@ -367,7 +259,7 @@ export default function PartyRoom({
             </div>
           )}
 
-          {/* Connection Status Overlay (Optional, for debugging or bad connection) */}
+          {/* Connection Status Overlay */}
           {!isConnected && (
             <div className='absolute top-4 right-4 bg-red-500/90 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2 z-30'>
               <Activity className='w-3 h-3 animate-pulse' />
@@ -424,12 +316,13 @@ export default function PartyRoom({
             type='text'
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
-            placeholder='اكتب رسالة...'
-            className='flex-1 border border-white/10 bg-white/10 hover:bg-white/20 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-red-500 outline-none'
+            placeholder={isConnected ? 'اكتب رسالة...' : 'جارِ الاتصال...'}
+            disabled={!isConnected}
+            className='flex-1 border border-white/10 bg-white/10 hover:bg-white/20 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-white/50 outline-none disabled:opacity-50 disabled:cursor-not-allowed'
           />
           <button
             type='submit'
-            className='p-2 border-white/10 bg-white/10 hover:bg-white/20 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-red-500 transition-colors'
+            className='p-2 border-white/10 bg-white/10 hover:bg-white/20 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-white/50 transition-colors'
             disabled={!isConnected}
           >
             <Send className='w-4 h-4' />

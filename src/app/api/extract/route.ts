@@ -63,6 +63,12 @@ export async function GET(req: NextRequest) {
     // Using networkidle0 to ensure initial assets are loaded
     await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
+    // Remove vidsrc-player element as requested
+    await page.evaluate(() => {
+      const el = document.getElementById('vidsrc-player');
+      if (el) el.remove();
+    });
+
     // 3. Handle page interaction sequence
     // Wait for the ad / main player logic
     // The prompt says "Wait for the 15-second ad to complete"

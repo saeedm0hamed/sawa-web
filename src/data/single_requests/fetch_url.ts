@@ -19,6 +19,6 @@ export default async function FetchUrl(mediaType: string, tmdb: string) {
     //     console.error("FetchUrl error:", error);
     //     return null;
     // }
-    return "https://i-arch-400.jekop401kim.com/stream2/i-arch-400/c4a924b3e8d15fed6861f9f5af6505c2/MJTMsp1RshGTygnMNRUR2N2MSlnWXZEdMNDZzQWe5MDZzMmdZJTO1R2RWVHZDljekhkSsl1VwYnWtx2cihVT21kaOtmTXlVeNdUSxo1RKxWTEd2dNdlVr1UbGtWWtZ1aPREaop1VNBTTykVP:1769517053:104.164.55.17:36fb5dba8e0dc41a45a96c75cbececb83b18e3cfe9565c994b7eee5b5ec25c25:=0EVBBDTqVkMONENx40U0gnT31TP/index.m3u8";
+    return "https://cdn30092.vekna402las.com/stream2/i-arch-400/c4a924b3e8d15fed6861f9f5af6505c2/MJTMsp1RshGTygnMNRUR2N2MSlnWXZEdMNDZzQWe5MDZzMmdZJTO1R2RWVHZDljekhkSsl1VwYnWtx2cihVT21kaOtmTXlVeNdUSxo1RKxWTEd2dNdlVr1UbGtWWtZ1aPREaop1VNBTTykVP:1769604436:104.164.55.17:36fb5dba8e0dc41a45a96c75cbececb83b18e3cfe9565c994b7eee5b5ec25c25:=0EVBBDTqVkMONENx40U0gnT31TP/1080/index.m3u8";
 } 
 
