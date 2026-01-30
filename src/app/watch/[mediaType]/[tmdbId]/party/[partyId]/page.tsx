@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
-import FetchUrl from '@/data/single_requests/fetch_url';
+// import FetchUrl from '@/data/single_requests/fetch_url';
 import PartyRoom from '@/components/watch/PartyRoom';
 import FetchDetails, { FullDetailsType } from '@/data/single_requests/fetch_details';
 import Image from 'next/image';
@@ -15,16 +16,16 @@ export default async function PartyPage({
   if (mediaType !== 'movie' && mediaType !== 'tv') return notFound();
   if (!/^\d+$/.test(tmdbId)) return notFound();
 
-  let url = null;
-  try {
-    url = await FetchUrl(mediaType, tmdbId);
-  } catch (error) {
-    console.error('Failed to fetch video URL:', error);
-  }
+  // let url = null;
+  // try {
+  //   url = await FetchUrl(mediaType, tmdbId);
+  // } catch (error) {
+  //   console.error('Failed to fetch video URL:', error);
+  // }
 
   const data: FullDetailsType | null = await FetchDetails(tmdbId, mediaType);
 
-  if (!url || !data) {
+  if (!data) {
     notFound();
   }
 
@@ -45,11 +46,11 @@ export default async function PartyPage({
         )}
         <div className='absolute inset-0 bg-black/60 backdrop-blur-3xl' />
       </div>
-      <div className='w-full flex justify-center'>
+      {/* <div className='w-full flex justify-center'>
         <Suspense fallback={<div className='w-full h-[60vh] animate-pulse bg-gray-800/50 rounded-lg' />}>
           <PartyRoom partyId={partyId} url={url} mediaType={mediaType} tmdbId={tmdbId} />
         </Suspense>
-      </div>
+      </div> */}
     </main>
   );
 }

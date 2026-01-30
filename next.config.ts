@@ -14,6 +14,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  devIndicators: false,
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {

@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
-import FetchUrl from '@/data/single_requests/fetch_url';
+// import FetchUrl from '@/data/single_requests/fetch_url';
 import FetchDetails, { FullDetailsType } from '@/data/single_requests/fetch_details';
 import WatchPlayer from '@/components/watch/WatchPlayer';
 import PartyControls from '@/components/watch/PartyControls';
@@ -12,10 +13,10 @@ export default async function WatchPage({ params }: { params: Promise<{ mediaTyp
   if (mediaType !== 'movie' && mediaType !== 'tv') return notFound();
   if (!/^\d+$/.test(tmdbId)) return notFound();
 
-  const url = await FetchUrl(mediaType, tmdbId);
+  // const url = await FetchUrl(mediaType, tmdbId);
   const data: FullDetailsType | null = await FetchDetails(tmdbId, mediaType);
 
-  if (!url || !data) {
+  if (!data) {
     notFound();
   }
 
@@ -37,7 +38,7 @@ export default async function WatchPage({ params }: { params: Promise<{ mediaTyp
         <div className='absolute inset-0 bg-black/60 backdrop-blur-3xl' />
       </div>
 
-      <div className='w-full flex flex-col items-center gap-6'>
+      {/* <div className='w-full flex flex-col items-center gap-6'>
         <WatchPlayer url={url} controls autoplay />
 
         <div className='w-full max-w-4xl pt-6'>
@@ -46,7 +47,7 @@ export default async function WatchPage({ params }: { params: Promise<{ mediaTyp
             <PartyControls mediaType={mediaType} tmdbId={tmdbId} />
           </Suspense>
         </div>
-      </div>
+      </div> */}
     </main>
   );
 }

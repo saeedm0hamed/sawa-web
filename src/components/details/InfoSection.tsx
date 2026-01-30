@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { SplitText } from 'gsap/SplitText';
 import { useRouter } from 'next/navigation';
-import FetchUrl from '@/data/single_requests/fetch_url';
+// import FetchUrl from '@/data/single_requests/fetch_url';
 import PartyControls from '../watch/PartyControls';
 
 gsap.registerPlugin(SplitText);
@@ -37,22 +37,22 @@ export default function InfoSection({
   const [hasStream, setHasStream] = useState<boolean>(false);
   const [checkingStream, setCheckingStream] = useState<boolean>(true);
 
-  useEffect(() => {
-    const checkStream = async () => {
-      try {
-        const typeSlug = main.type === 'فيلم' ? 'movie' : 'tv';
-        const url = await FetchUrl(typeSlug, main.id.toString());
-        setHasStream(!!url);
-      } catch (error) {
-        console.error('Failed to check stream:', error);
-        setHasStream(false);
-      } finally {
-        setCheckingStream(false);
-      }
-    };
+  // useEffect(() => {
+  //   const checkStream = async () => {
+  //     try {
+  //       const typeSlug = main.type === 'فيلم' ? 'movie' : 'tv';
+  //       const url = await FetchUrl(typeSlug, main.id.toString());
+  //       setHasStream(!!url);
+  //     } catch (error) {
+  //       console.error('Failed to check stream:', error);
+  //       setHasStream(false);
+  //     } finally {
+  //       setCheckingStream(false);
+  //     }
+  //   };
 
-    checkStream();
-  }, [main.id, main.type]);
+  //   checkStream();
+  // }, [main.id, main.type]);
 
   useEffect(() => {
     if (!sectionRef.current) return;
@@ -135,7 +135,7 @@ export default function InfoSection({
                 </>
               )}
             </Button>
-            {checkingStream ? (
+            {/* {checkingStream ? (
               <Button
                 disabled
                 className='w-1/2 xl:w-xs border border-white/10 bg-white/5 text-white/50 rounded-lg flex items-center justify-center gap-2'
@@ -155,7 +155,7 @@ export default function InfoSection({
                 </Button>
                 <PartyControls mediaType={main.type == 'فيلم' ? 'movie' : 'tv'} tmdbId={main.id.toString()} />
               </>
-            ) : null}
+            ) : null} */}
           </div>
         </div>
       </div>
