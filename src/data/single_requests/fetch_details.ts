@@ -113,10 +113,14 @@ export default async function FetchFullDetails(
     );
 
     if (!main) return null; // Return null if no main data
-
+    
     // Return null if this is a romance media item (genre id 10749)
     const hasRomanceGenre = main.genres?.some((g: any) => g.id === 10749);
     if (hasRomanceGenre) return null;
+    
+    // Return null if media has any female cast members
+    const hasFemaleCast = credits?.cast?.some((c: any) => c.gender === 1);
+    if (hasFemaleCast) return null;
 
     // If TV show, fetch season episodes
     if (main.seasons?.length) {
