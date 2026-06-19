@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useLayoutEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import gsap from 'gsap';
@@ -29,28 +29,47 @@ export default function HeroSection({ data }: { data: MediaItem[] }) {
     Autoplay({ delay: 5000, stopOnInteraction: false }),
   ]);
 
-  useEffect(() => {
-    if (!emblaApi || !containerRef.current) return;
+  useLayoutEffect(() => {
+    if (!emblaApi || !containerRef.current || data.length === 0) return;
 
-    const onSelect = () => {
-      const newIndex = emblaApi.selectedScrollSnap();
-      setSelectedIndex(newIndex);
+    const ctx = gsap.context(() => {
+      const onSelect = () => {
+        const newIndex = emblaApi.selectedScrollSnap();
+        setSelectedIndex(newIndex);
 
-      gsap.fromTo(
-        [titleRef.current, genresRef.current, overviewRef.current, btnRef.current],
-        { y: 50, opacity: 0, visibility: 'visible' },
-        {
-          y: 0,
-          opacity: 1,
-          delay: 0.3,
-          stagger: { amount: 1 },
-        },
-      );
-    };
+        const targets = [
+          titleRef.current,
+          genresRef.current,
+          overviewRef.current,
+          btnRef.current
+        ].filter(Boolean) as HTMLElement[];
 
-    emblaApi.on('select', onSelect);
-    onSelect();
-  }, [selectedIndex, emblaApi]);
+        if (targets.length === 0) return;
+
+        gsap.fromTo(
+          targets,
+          { y: 50, opacity: 0, visibility: 'visible' },
+          {
+            y: 0,
+            opacity: 1,
+            delay: 0.3,
+            stagger: { amount: 1 },
+          },
+        );
+      };
+
+      emblaApi.on('select', onSelect);
+      onSelect();
+
+      return () => {
+        emblaApi.off('select', onSelect);
+      };
+    }, containerRef);
+
+    return () => ctx.revert();
+  }, [selectedIndex, emblaApi, data.length]);
+
+  if (data.length === 0) return null;
 
   // Render up to two genres with separator dots
   const renderGenres = (genres: string[] | number[]) =>
@@ -84,14 +103,14 @@ export default function HeroSection({ data }: { data: MediaItem[] }) {
               <div className='absolute bottom-35 md:bottom-24 z-20 w-full flex justify-center text-center slide-content'>
                 <div className='w-full md:w-3/4 lg:w-1/2 text-white space-y-2 mx-4 md:mx-8'>
                   {/* Title */}
-                  <Title ref={selectedIndex === index ? titleRef : null} className='title invisible'>
+                  <Title ref={selectedIndex === index ? titleRef : null} className='title'>
                     {media.title_en}
                   </Title>
 
                   {/* Genres and metadata */}
                   <div
                     ref={selectedIndex === index ? genresRef : null}
-                    className='genres invisible flex flex-wrap justify-center items-center gap-2 text-sm md:text-base text-white/80'
+                    className='genres flex flex-wrap justify-center items-center gap-2 text-sm md:text-base text-white/80'
                   >
                     {renderGenres(media.genre_ids)}
                     <span className='w-1 h-5 bg-white/50 rounded-full' />
@@ -104,14 +123,14 @@ export default function HeroSection({ data }: { data: MediaItem[] }) {
                   {media.overview && (
                     <p
                       ref={selectedIndex === index ? overviewRef : null}
-                      className='overview invisible text-sm md:text-base text-white/80 text-justify line-clamp-2'
+                      className='overview text-sm md:text-base text-white/80 text-justify line-clamp-2'
                     >
                       {media.overview}
                     </p>
                   )}
 
                   {/* Details button */}
-                  <div ref={selectedIndex === index ? btnRef : null} className='button invisible'>
+                  <div ref={selectedIndex === index ? btnRef : null} className='button'>
                     <Button
                       className='w-full rounded-full bg-white/10 border backdrop-blur-[1px] mt-2 hover:bg-white/20 text-white px-6 py-2 text-sm md:text-base'
                       onClick={() => router.push(`/details/${media.type === 'فيلم' ? 'movie' : 'tv'}/${media.id}`)}
