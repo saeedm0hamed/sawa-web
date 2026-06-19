@@ -59,6 +59,9 @@ export default async function FetchActorFullInfo(personId: string): Promise<Arti
   );
 
   if (!infoArtist) notFound(); // Return 404 if no artist data
+  
+  // Return 404 if this is a female artist (gender 1)
+  if (infoArtist.gender === 1) notFound();
 
   // Build artist details object
   const artist: ArtistDetails = {

@@ -114,6 +114,10 @@ export default async function FetchFullDetails(
 
     if (!main) return null; // Return null if no main data
 
+    // Return null if this is a romance media item (genre id 10749)
+    const hasRomanceGenre = main.genres?.some((g: any) => g.id === 10749);
+    if (hasRomanceGenre) return null;
+
     // If TV show, fetch season episodes
     if (main.seasons?.length) {
       const seasonResults = await Promise.allSettled(
@@ -172,20 +176,22 @@ export default async function FetchFullDetails(
         }))
     };
 
-    // Map recommendations with needed fields
-    const recommendation: MediaItem[] = (recommendations?.results || []).map((item: any) => ({
-      id: item.id,
-      title_ar: item.title || item.name || "بدون عنوان",
-      title_en: item.original_title || item.original_name || "",
-      genre_ids: getGenreNames(item.genre_ids || []),
-      original_language: item.original_language,
-      overview: item.overview || "",
-      backdrop_path: item.backdrop_path || item.poster_path || null,
-      poster_path: item.poster_path || null,
-      release_date: item.release_date || item.first_air_date || "",
-      type: item.media_type === "tv" || item.first_air_date ? "مسلسل" : "فيلم",
-      vote_average: item.vote_average || 0
-    }));
+    // Map recommendations with needed fields, excluding romance
+    const recommendation: MediaItem[] = (recommendations?.results || [])
+      .filter((item: any) => !item.genre_ids?.includes(10749))
+      .map((item: any) => ({
+        id: item.id,
+        title_ar: item.title || item.name || "بدون عنوان",
+        title_en: item.original_title || item.original_name || "",
+        genre_ids: getGenreNames(item.genre_ids || []),
+        original_language: item.original_language,
+        overview: item.overview || "",
+        backdrop_path: item.backdrop_path || item.poster_path || null,
+        poster_path: item.poster_path || null,
+        release_date: item.release_date || item.first_air_date || "",
+        type: item.media_type === "tv" || item.first_air_date ? "مسلسل" : "فيلم",
+        vote_average: item.vote_average || 0
+      }));
 
     // Prepare reviews, fix avatar URLs and format date
     const reviewList: ReviewType[] = (reviews?.results || []).map((review: any) => {
